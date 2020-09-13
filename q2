@@ -1,0 +1,32 @@
+'''
+Tons of assumptions here given only 2 examples so this would surely break in the real world
+There are no other combinations of names/junk
+There is always 1 first name and 1 last name
+There are never more than 2 strings to the name (first/last name)
+There are never any middle names
+Names aren't hyphenated or contain foreign characters
+When the name is only separated by one space the pattern is always 'Lastname FIRSTNAME'
+When the name is separated by junk (non-alpha) the pattern is always 'Firstname anythingbutalpha LASTNAME'
+
+Regex to find pattern. If the middle match is a single space then the order is Lastname FIRSTNAME, else the order is Firstname LASTNAME
+
+Using pyspark:
+'''
+
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import split
+
+spark = SparkSession.builder.getOrCreate()
+
+pattern = ('(\b[A-Z]{1}[a-z]+\b)'  # Title case string
+          '(.*)'  # Anything in the middle including spaces or garbage
+          '(\b[A-Z]+\b)')  # All caps string
+
+df = spark.createDataFrame([(" John 123123~@: DOE,,", " Doe JANE ")], ["name",])
+df.withColumn('matches', split(df.name, pattern).alias('matches')).show()
+
+'''
+Unable to test with pyspark as not able to install a compatible version of python with spark.
+Approach would be to test the middle match item and if it's a space then the pattern is Lastname FIRSTNAME, else it's Firstname Lastname.
+I'd check that condition and reorder the name based on that and convert to uppercase with name.upper().
+'''
